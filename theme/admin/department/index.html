@@ -1,0 +1,183 @@
+<body>
+<style type="text/css">
+    a {
+        font-size: 18px;
+    }
+    i {
+        cursor: pointer;
+    }
+</style>
+<div style="float: left;margin: 10px 10px;width: 400px">
+    <ul id="nav" style="overflow:scroll;overflow-x:hidden;height: 80%;">
+        <li class="top-department" data-id="0">
+            <i class="layui-icon icon-hide" style="size: 18px">&#xe625;</i>
+            <a href="javascript:;">总部门</a>
+            <i class="layui-icon icon-add" style="size: 18px">&#xe654;</i>
+            {$department_str}
+        </li>
+    </ul>
+    {eq name=":request()->controller()" value="Administrator"}
+    <a class="layui-btn layui-btn-normal" style="float: right;margin-right: 10px;margin-top: 20px">确定提交</a>
+    {/eq}
+</div>
+{eq name=":request()->controller()" value="Department"}
+<div style="float: left;margin: 50px 10px;">
+    <form class="layui-form" action="" id="department-info" style="display: none">
+        <input type="hidden" name="type" value="">
+        <input type="hidden" name="id" value="0">
+        <div class="layui-inline">
+            <label class="layui-form-label">部门名称</label>
+            <div class="layui-input-inline">
+                <input type="text" name="department_name" required lay-verify="required" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">序号</label>
+            <div class="layui-input-inline">
+                <input type="text" name="sort" required lay-verify="required" class="layui-input" value="0">
+            </div>
+        </div>
+        <div class="layui-inline sure-btn" style="margin-left: 20px">
+            <div class="layui-inline">
+                <button class="layui-btn" lay-submit lay-filter="sureBtn">立即提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+{/eq}
+</body>
+<script type="text/javascript" src="__COMMON__/js/public.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $(document).on("click", ".icon-show", function () {
+            $(this).nextAll("ul").show();
+            $(this).addClass("icon-hide").removeClass("icon-show").html("&#xe625;");
+        });
+
+        $(document).on("click", ".icon-hide", function () {
+            $(this).parent("li").find("ul").hide();
+            $(this).parent("li").find(".icon-hide").addClass("icon-show").removeClass("icon-hide").html("&#xe623;");
+        });
+
+    });
+</script>
+{eq name=":request()->controller()" value="Department"}
+<script type="text/javascript">
+    $(function () {
+        layui.use('form', function () {
+            var form = layui.form;
+            form.on('submit(sureBtn)', function (data) {
+                var field = data.field;
+                var type = field.type;
+                if (type == "add") {
+                    field.pid = field.id;
+                    var url = "__DOMAIN__/admin/department/insert.html";
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: field,
+                        success: function (result) {
+                            if (result.code == 1) {
+                                layer.msg("添加成功！", {time: 1000}, function () {
+                                    window.location.reload();
+                                });
+                            } else if (result.code == 0) {
+                                layer.alert(result.msg);
+                            }
+                        }
+                    });
+                } else if (type == "edit") {
+                    var url = "__DOMAIN__/admin/department/update.html";
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: field,
+                        success: function (result) {
+                            if (result.code == 1) {
+                                layer.msg("修改成功！", {time: 1000});
+                            } else if (result.code == 0) {
+                                layer.alert(result.msg);
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+        });
+        $(document).on("click", ".icon-delete", function () {
+            var id = $(this).parent("li").data("id");
+            var url = "__DOMAIN__/admin/department/delete.html";
+            layer.confirm("你确定要删除该部门吗？", function () {
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {id: id},
+                    success: function (result) {
+                        if (result.code == 1) {
+                            layer.msg(result.msg, {time: 1000}, function () {
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.alert(result.msg);
+                        }
+                    }
+                });
+            });
+        });
+
+        $(document).on("click", ".icon-add", function () {
+            var id = $(this).parent("li").data("id");
+            form_update($(this).prevAll(".node-a"), "add", id);
+        });
+
+        $(document).on("click", ".icon-edit", function () {
+            var id = $(this).parent("li").data("id");
+            form_update($(this).prevAll(".node-a"), "edit", id);
+        });
+
+        $(document).on("click", ".node-a", function () {
+            var id = $(this).parent("li").data("id");
+            form_update($(this), "select", id);
+        });
+
+        function form_update(a, type, id) {
+            if (type == "add") {
+                $("input[name='department_name']").attr("disabled", false).val("");//无效去除并清空值
+                $("input[name='sort']").attr("disabled", false).val(0);//无效去除并清空值
+                $(".sure-btn").show();//提交按钮显示
+                $("#department-info").show();//表单显示
+            } else if (type == "edit" || type == "select") {
+                var waitIndex = layer.load(2);
+                $.ajax({
+                    data: {type: "get", id: id},
+                    type: "POST",
+                    success: function (result) {
+                        layer.close(waitIndex);
+                        if (result.code = 0) {
+                            layer.alert(result.msg);
+                            return false;
+                        } else {
+                            var data = result.data;
+                            if (type == "edit") {
+                                $("input[name='department_name']").attr("disabled", false).val(data.name);//无效去除并赋值
+                                $("input[name='sort']").attr("disabled", false).val(data.sort);//无效去除并赋值
+                                $(".sure-btn").show();//提交按钮显示
+                                $("#department-info").show();//表单显示
+                            } else if (type == "select") {
+                                $("input[name='department_name']").attr("disabled", true).val(data.name);//无效并赋值
+                                $("input[name='sort']").attr("disabled", true).val(data.sort);//无效并赋值
+                                $(".sure-btn").hide();//提交按钮隐藏
+                                $("#department-info").show();//表单显示
+                            }
+                        }
+                    }
+                });
+            }
+            $(".node-a").css("color", "#333");//所有节点默认颜色
+            a.css("color", "#5FB878");//选中的变颜色
+            $("input[name='type']").val(type);//类型赋值
+            $("input[name='id']").val(id);//id赋值
+        }
+    });
+</script>
+{/eq}
