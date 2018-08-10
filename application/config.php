@@ -114,7 +114,7 @@ return [
         // 模板引擎类型 支持 php think 支持扩展
         'type' => 'Think',
         // 模板路径，当前视图定位为（项目根目录/theme/模块名/控制器名/操作名.html，注：所有的地址为小写）
-        'view_base' => ROOT_PATH . DS . "theme" . DS,
+        'view_base' => ROOT_PATH . DS . "appview" . DS,
         // 模板后缀
         'view_suffix' => 'html',
         // 模板文件名分隔符
